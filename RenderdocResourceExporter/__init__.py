@@ -42,20 +42,21 @@ def error_log(func_):
 def ExportFbx(pyrenderdoc_, data_):
     emgr = pyrenderdoc_.Extensions()
 
-    dialog = FbxExportOptionDialog(emgr) # 进行导出配置
+    dialog = FbxExportOptionDialog(emgr) # 进行导出配置 | Configure export
     if not dialog.mqt.ShowWidgetAsDialog(dialog.init_ui()): return # 是不是主动取消的
 
-    # 选择保存位置
+    # 选择保存位置 | Select save location
     fbx_save_path = emgr.SaveFileName(RCM.get_text(RCM.c_save_fbx_file_to), '', '*.fbx')
     if not fbx_save_path:
-        emgr.ErrorDialog(RCM.get_text(RCM.c_save_path_error), 'Error!!!')
+        # not worth to error
+        # emgr.ErrorDialog(RCM.get_text(RCM.c_save_path_error), 'Error!!!')
         return
-    # csv的地址
-    csv_save_path = fbx_save_path.replace('.fbx', '.csv')
+    # csv的地址 | csv address
+    csv_save_path = fbx_save_path #.replace('.fbx', '.csv')
 
-    # 直接从 QTableView 界面获取数据
+    # 直接从 QTableView 界面获取数据 | Get data directly from QTableView interface
     main_window = pyrenderdoc_.GetMainWindow().Widget()
-    table = main_window.findChild(QtWidgets.QTableView, 'vsinData')
+    table = main_window.findChild(QtWidgets.QTableView, 'inTable') # thx issue #1
     model = table.model()
     row_count = model.rowCount()
     column_count = model.columnCount()
@@ -65,18 +66,16 @@ def ExportFbx(pyrenderdoc_, data_):
         emgr.ErrorDialog(RCM.get_text(RCM.c_not_mesh_data), 'Error!!!')
         return
 
-    # 导出CSV数据表
+    # 导出CSV数据表 | Export CSV data table
     meshToCsv = MeshToCsv(emgr)
     pyrenderdoc_.Replay().BlockInvoke(meshToCsv.execute(table, csv_save_path))
-    # 读取CSV文件，导出FBX文件
-    if os.path.exists(csv_save_path):
-        csvToFbx = CsvToFbx(emgr)
-        pyrenderdoc_.Replay().BlockInvoke(csvToFbx.execute(csv_save_path, fbx_save_path, dialog.export_config))
-
+    # 读取CSV文件，导出FBX文件 | Read CSV files and export FBX files
+    # if os.path.exists(csv_save_path):
+    #     csvToFbx = CsvToFbx(emgr)
+    #     pyrenderdoc_.Replay().BlockInvoke(csvToFbx.execute(csv_save_path, fbx_save_path, dialog.export_config))
     emgr.MessageDialog(RCM.get_text(RCM.c_export_complete), '\(^o^)/')
 
-    # 打开保存位置
+    # 打开保存位置 | Open save location
     fbx_dir = os.path.dirname(fbx_save_path)
     if os.path.exists(fbx_dir):
         os.startfile(fbx_dir)
-
